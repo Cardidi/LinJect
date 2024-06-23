@@ -306,6 +306,15 @@
       },
       "url": "https://packages.unity.com"
     },
+    "xyz.ca2didi.unity.toolkit": {
+      "version": "https://github.com/Cardidi/ca2d-unity-toolkit.git?path=/Assets/Toolkit",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.cysharp.unitask": "2.5.4"
+      },
+      "hash": "e71a996680d25a076740ac4c76c14bf2c35fe95f"
+    },
     "com.unity.modules.ai": {
       "version": "1.0.0",
       "depth": 0,
