@@ -119,8 +119,7 @@ namespace LinJector.Core
                 return rrs.Select(rr => rr.Resolve(this)).ToArray();
             }
         }
-
-
+        
         public uint ResolveAll(Type type, object id, List<object> results)
         {
             DisposedTest();
@@ -133,7 +132,7 @@ namespace LinJector.Core
                 return count;
             }
         }
-
+        
         public T Resolve<T>(object id = null)
         {
             DisposedTest();
@@ -155,7 +154,6 @@ namespace LinJector.Core
                 return rrs.Select(rr => rr.Resolve<T>(this)).ToArray();
             }
         }
-
 
         public uint ResolveAll<T>(object id, List<T> results)
         {

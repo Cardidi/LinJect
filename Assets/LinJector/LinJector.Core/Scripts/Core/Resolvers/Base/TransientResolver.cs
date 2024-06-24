@@ -1,11 +1,11 @@
 ﻿using LinJector.Enum;
 using LinJector.Interface;
 
-namespace LinJector.Core.Resolvers
+namespace LinJector.Core.Resolvers.Base
 {
-    public abstract class SingletonResolver : ILifetimeResolver
+    public abstract class TransientResolver : ILifetimeResolver, IIgnoreEventResolver
     {
-        public Lifetime Lifetime => Lifetime.Singleton;
+        public CrossContainer CrossContainerStrategy => CrossContainer.Move;
 
         public bool Duplicate(out ILifetimeResolver resolver)
         {

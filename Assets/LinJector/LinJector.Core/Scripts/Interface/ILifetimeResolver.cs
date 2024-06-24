@@ -5,6 +5,9 @@ using LinJector.Enum;
 namespace LinJector.Interface
 {
 
+    /// <summary>
+    /// The basic format of a resolver.
+    /// </summary>
     public interface IResolver
     {
         /// <summary>
@@ -20,12 +23,16 @@ namespace LinJector.Interface
         public T Resolve<T>(Container container);
     }
     
+    /// <summary>
+    /// An extended format resolver designed for container to run and manage 
+    /// </summary>
     public interface ILifetimeResolver : IResolver
     {
+
         /// <summary>
-        /// The lifetime of this kind of resolver
+        /// How did this resolver behave when create child container.
         /// </summary>
-        public Lifetime Lifetime { get; }
+        public CrossContainer CrossContainerStrategy { get; }
         
         /// <summary>
         /// Try to get a brand-new resolver for child container.
@@ -35,4 +42,19 @@ namespace LinJector.Interface
         public bool Duplicate(out ILifetimeResolver resolver);
         
     }
+
+    /// <summary>
+    /// Additional flag for resolver to pre-initialize themselves intend to non-lazy format. 
+    /// </summary>
+    public interface IConsiderPreInitializeResolver
+    {
+        public void PreInitialize(Container container);
+    }
+
+    /// <summary>
+    /// Additional flag for resolver to prevent container event handler do event on this resolver. Used to prevent
+    /// cross-container lifetime manager conflict.
+    /// </summary>
+    public interface IIgnoreEventResolver
+    {}
 }

@@ -5,7 +5,7 @@ namespace LinJector.Interface
 {
     public interface IActivatorFactory
     {
-        public delegate object ObjectActivator(params object[] args);
+        public delegate object ObjectActivator(Action<object> beforeConstructor, params object[] args);
 
         public ObjectActivator MakeActivator(Type type, ConstructorInfo constructor, Type[] parameters);
         

@@ -45,13 +45,19 @@ namespace LinJector.Core.Resolvers
         public object Resolve(Container container)
         {
             if (_runtimeActivator == null) throw LinJectErrors.TypedResolverCanNotActivate();
-            return _runtimeActivator.Invoke(_arguments);
+            return _runtimeActivator.Invoke(obj =>
+            {
+                // todo: made pre-injection done.
+            }, _arguments);
         }
 
         public T Resolve<T>(Container container)
         {
             if (_runtimeActivator == null) throw LinJectErrors.TypedResolverCanNotActivate();
-            return (T) _runtimeActivator.Invoke(_arguments);
+            return (T) _runtimeActivator.Invoke(obj =>
+            {
+                // todo: made pre-injection done.
+            }, _arguments);
         }
     }
 }

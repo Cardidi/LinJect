@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using LinJector.Interface;
 using ObjectActivator = LinJector.Interface.IActivatorFactory.ObjectActivator;
 
@@ -9,17 +10,27 @@ namespace LinJector.Core.Activator
     {
         public ObjectActivator MakeActivator(Type type, ConstructorInfo constructor, Type[] parameters)
         {
-            return args =>
+            return (call, args) =>
             {
-                var instance = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(type);
+                var instance = RuntimeHelpers.GetUninitializedObject(type);
+                call?.Invoke(instance);
                 constructor.Invoke(instance, args);
+                
                 return instance;
             };
         }
 
         public ObjectActivator MakeDefaultActivator(Type type)
         {
-            return args => System.Runtime.Serialization.FormatterServices.GetUninitializedObject(type);
+            var defaultConstructor = type.GetConstructor(Array.Empty<Type>());
+            return (call, args) =>
+            {
+                var instance = RuntimeHelpers.GetUninitializedObject(type);
+                call?.Invoke(instance);
+                defaultConstructor?.Invoke(instance, null);
+
+                return instance;
+            };
         }
     }
 }

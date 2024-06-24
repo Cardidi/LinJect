@@ -1,4 +1,6 @@
-﻿namespace LinJector.Core.Resolvers
+﻿using LinJector.Core.Resolvers.Base;
+
+namespace LinJector.Core.Resolvers
 {
     public class FromInstanceSingletonResolver : SingletonResolver
     {

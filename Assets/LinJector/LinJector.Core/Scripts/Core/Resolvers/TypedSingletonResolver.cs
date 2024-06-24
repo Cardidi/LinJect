@@ -1,8 +1,10 @@
 ﻿using System;
+using LinJector.Core.Resolvers.Base;
+using LinJector.Interface;
 
 namespace LinJector.Core.Resolvers
 {
-    public class TypedSingletonResolver : SingletonResolver
+    public class TypedSingletonResolver : SingletonResolver, IConsiderPreInitializeResolver
     {
         private TypedResolver _resolver;
 
@@ -10,15 +12,21 @@ namespace LinJector.Core.Resolvers
         
         private object _result;
         
-        public TypedSingletonResolver(Type type)
+        private bool _noLazy;
+        
+        public TypedSingletonResolver(bool noLazy, Type type)
         {
             _resolver = TypedResolver.Get(type);
+            _noLazy = noLazy;
         }
 
         private void MakeResolvable(Container container)
         {
             if (!_cached)
+            {
+                _cached = true;
                 _result = _resolver.Resolve(container);
+            }
         }
 
         public override object Resolve(Container container)
@@ -31,6 +39,11 @@ namespace LinJector.Core.Resolvers
         {
             MakeResolvable(container);
             return (T) _result;
+        }
+        
+        public void PreInitialize(Container container)
+        {
+            if (_noLazy) MakeResolvable(container);
         }
     }
 }

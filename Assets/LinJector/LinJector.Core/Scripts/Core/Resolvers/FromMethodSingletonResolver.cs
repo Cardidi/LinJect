@@ -1,20 +1,25 @@
 ﻿using System;
+using LinJector.Core.Resolvers.Base;
+using LinJector.Interface;
 
 namespace LinJector.Core.Resolvers
 {
-    public class FromMethodSingletonResolver : SingletonResolver
+    public class FromMethodSingletonResolver : SingletonResolver, IConsiderPreInitializeResolver
     {
 
-        private Func<object> _activator;
+        private Func<Container, object> _activator;
 
         private bool _cached;
         
         private object _result;
+
+        private bool _noLazy;
         
-        public FromMethodSingletonResolver(Func<object> activator)
+        public FromMethodSingletonResolver(bool noLazy, Func<Container, object> activator)
         {
             if (activator == null) throw LinJectErrors.TypedResolverCanNotActivate();
             _activator = activator;
+            _noLazy = noLazy;
         }
         
         private void MakeResolvable(Container container)
@@ -22,7 +27,7 @@ namespace LinJector.Core.Resolvers
             if (!_cached)
             {
                 _cached = true;
-                _result = _activator();
+                _result = _activator(container);
             }
         }
 
@@ -36,6 +41,11 @@ namespace LinJector.Core.Resolvers
         {
             MakeResolvable(container);
             return (T) _result;
+        }
+
+        public void PreInitialize(Container container)
+        {
+            if (_noLazy) MakeResolvable(container);
         }
     }
 }

@@ -6,7 +6,7 @@ namespace LinJector.Core.Activator
 {
     public class UnsupportedActivatorFactory : IActivatorFactory
     {
-        private static readonly IActivatorFactory.ObjectActivator Error = _ => throw new InvalidProgramException(
+        private static readonly IActivatorFactory.ObjectActivator Error = (_, _) => throw new InvalidProgramException(
             "Activator are trying to create new object on this platform but unfortunately that this platform " +
             "is unsupported.");
         

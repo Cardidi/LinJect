@@ -1,32 +1,39 @@
-﻿using System;
+using System;
 using LinJector.Core.Resolvers.Base;
 using LinJector.Interface;
 
 namespace LinJector.Core.Resolvers
 {
-    public class ParameterTypedSingletonResolver : SingletonResolver, IConsiderPreInitializeResolver
+    public class FromMethodScopeResolver : ScopeResolver, IConsiderPreInitializeResolver
     {
-        private TypedResolver _resolver;
+        private Func<Container, object> _activator;
 
         private bool _cached;
         
         private object _result;
-        
+
         private bool _noLazy;
         
-        public ParameterTypedSingletonResolver(bool noLazy, Type type, object[] arguments)
+        public FromMethodScopeResolver(bool noLazy, Func<Container, object> activator)
         {
-            _resolver = TypedResolver.Get(type, arguments);
+            if (activator == null) throw LinJectErrors.TypedResolverCanNotActivate();
+            _activator = activator;
             _noLazy = noLazy;
         }
-
+        
         private void MakeResolvable(Container container)
         {
             if (!_cached)
             {
                 _cached = true;
-                _result = _resolver.Resolve(container);
+                _result = _activator(container);
             }
+        }
+
+        public override bool Duplicate(out ILifetimeResolver resolver)
+        {
+            resolver = new FromMethodScopeResolver(_noLazy, _activator);
+            return true;
         }
 
         public override object Resolve(Container container)
@@ -40,7 +47,7 @@ namespace LinJector.Core.Resolvers
             MakeResolvable(container);
             return (T) _result;
         }
-        
+
         public void PreInitialize(Container container)
         {
             if (_noLazy) MakeResolvable(container);

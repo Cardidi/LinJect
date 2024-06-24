@@ -15,5 +15,11 @@ namespace LinJector.Core
             return new InvalidProgramException(
                 "Typed resolver is trying to activate new object by type, but this is impossible.");
         }
+
+        public static InvalidProgramException LoopedDependencyChainDetected()
+        {
+            return new InvalidProgramException(
+                "There are two resolver relying on each other which make resolving impossible");
+        }
     }
 }

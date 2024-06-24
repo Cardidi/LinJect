@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using LinJector.Core.Resolvers.Base;
 using LinJector.Interface;
 
 namespace LinJector.Core.Resolvers
 {
-    public class ParameterTypedSingletonResolver : SingletonResolver, IConsiderPreInitializeResolver
+    public class ParameterTypedScopeResolver : ScopeResolver, IConsiderPreInitializeResolver
     {
         private TypedResolver _resolver;
 
@@ -14,9 +14,15 @@ namespace LinJector.Core.Resolvers
         
         private bool _noLazy;
         
-        public ParameterTypedSingletonResolver(bool noLazy, Type type, object[] arguments)
+        public ParameterTypedScopeResolver(bool noLazy, Type type, object[] arguments)
         {
             _resolver = TypedResolver.Get(type, arguments);
+            _noLazy = noLazy;
+        }
+
+        private ParameterTypedScopeResolver(bool noLazy, TypedResolver resolver)
+        {
+            _resolver = resolver;
             _noLazy = noLazy;
         }
 
@@ -27,6 +33,12 @@ namespace LinJector.Core.Resolvers
                 _cached = true;
                 _result = _resolver.Resolve(container);
             }
+        }
+
+        public override bool Duplicate(out ILifetimeResolver resolver)
+        {
+            resolver = new ParameterTypedScopeResolver(_noLazy, _resolver);
+            return true;
         }
 
         public override object Resolve(Container container)

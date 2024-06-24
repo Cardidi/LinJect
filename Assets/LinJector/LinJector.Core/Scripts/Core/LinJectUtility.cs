@@ -12,9 +12,8 @@ namespace LinJector.Core
         {
             if (_activatorFactory == null)
             {
-#if ENABLE_MONO
-                _activatorFactory = new MonoActivatorFactory();
-#elif ENABLE_IL2CPP
+#if ENABLE_MONO || ENABLE_IL2CPP
+                // _activatorFactory = new MonoActivatorFactory();
                 _activatorFactory = new IL2CPPActivatorFactory();
 #else
                 _activatorFactory = new UnsupportedActivatorFactory();
