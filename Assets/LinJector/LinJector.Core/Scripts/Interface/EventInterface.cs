@@ -6,12 +6,7 @@ namespace LinJector.Interface
     {
         public void Initialize();
     }
-
-    public interface IAsyncInitialize
-    {
-        public ValueTask InitializeAsync();
-    }
-
+    
     public interface ITickable
     {
         public void Tick();

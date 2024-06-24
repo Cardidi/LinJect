@@ -10,7 +10,7 @@ namespace LinJector.Core
     /// <summary>
     /// Data Structure which provides immutable object graph and dependency searcher.
     /// </summary>
-    public sealed class Container : IDisposable, IAsyncDisposable
+    public sealed class Container : IDisposable
     {
         #region StaticMembers
 
@@ -21,14 +21,23 @@ namespace LinJector.Core
         #endregion
 
         private uint _id;
+
+        private bool _initialized;
         
         private Container _parent;
 
         private List<Container> _children;
+
+        private LifetimeEventRegistry _eventRegistry;
         
         private Dictionary<Type, Dictionary<object, IList<ILifetimeResolver>>> _innerMap;
 
         #region PrivateAPI
+
+        private IEnumerable<ILifetimeResolver> Resolvable()
+        {
+            return _innerMap.Values.SelectMany(kp => kp.Values).SelectMany(p => p);
+        }
 
         private IEnumerable<ILifetimeResolver> Resolvable(Type type)
         {
@@ -43,18 +52,20 @@ namespace LinJector.Core
         private IEnumerable<ILifetimeResolver> Resolvable(Type type, object id)
         {
             if (_innerMap.TryGetValue(type, out var dict) && 
-                dict.TryGetValue(type, out var list))
+                dict.TryGetValue(id, out var list))
             {
                 return list;
             }
 
             return Enumerable.Empty<ILifetimeResolver>();
         }
-        
-        private void DisposedTest()
+
+
+        private void SelfAvailableTest(bool requireInit = true)
         {
-            if (IsDisposed()) 
-                throw new InvalidOperationException("Do not trying to access an Disposed container!");
+            if (requireInit && !_initialized)
+                throw new InvalidOperationException("Do not trying to access an uninitalized container!");
+            if (IsDisposed()) throw new InvalidOperationException("Do not trying to access an Disposed container!");
         }
 
         #endregion
@@ -62,7 +73,7 @@ namespace LinJector.Core
         #region InternalAPI
 
         internal bool IsDisposed() => _innerMap == null;
-
+        
         internal bool TakeResolver(Type type, object id, out ILifetimeResolver target)
         {
             if (id == null) target = Resolvable(type).FirstOrDefault();
@@ -87,22 +98,27 @@ namespace LinJector.Core
             return count;
         }
 
+        internal uint TakeAllResolvers(List<ILifetimeResolver> targets)
+        {
+            uint count = 0;
+            foreach (var r in Resolvable())
+            {
+                targets.Add(r);
+                count++;
+            }
+
+            return count;
+        }
+
         #endregion
 
         #region PublicAPI
 
-        public uint Id
-        {
-            get
-            {
-                DisposedTest();
-                return _id;
-            }
-        }
+        public uint Id => _id;
         
         public object Resolve(Type type, object id = null)
         {         
-            DisposedTest();
+            SelfAvailableTest();
 
             if (TakeResolver(type, id, out var target)) return target.Resolve(this);
             return default(object);
@@ -110,7 +126,7 @@ namespace LinJector.Core
         
         public object[] ResolveAll(Type type, object id = null)
         {
-            DisposedTest();
+            SelfAvailableTest();
 
             using (ListPool<ILifetimeResolver>.Get(out var rrs))
             {
@@ -122,7 +138,7 @@ namespace LinJector.Core
         
         public uint ResolveAll(Type type, object id, List<object> results)
         {
-            DisposedTest();
+            SelfAvailableTest();
 
             using (ListPool<ILifetimeResolver>.Get(out var rrs))
             {
@@ -135,7 +151,7 @@ namespace LinJector.Core
         
         public T Resolve<T>(object id = null)
         {
-            DisposedTest();
+            SelfAvailableTest();
 
             var type = typeof(T);
             if (TakeResolver(type, id, out var target)) return target.Resolve<T>(this);
@@ -144,7 +160,7 @@ namespace LinJector.Core
         
         public T[] ResolveAll<T>(object id = null)
         {
-            DisposedTest();
+            SelfAvailableTest();
 
             var type = typeof(T);
             using (ListPool<ILifetimeResolver>.Get(out var rrs))
@@ -157,7 +173,7 @@ namespace LinJector.Core
 
         public uint ResolveAll<T>(object id, List<T> results)
         {
-            DisposedTest();
+            SelfAvailableTest();
             
             var type = typeof(T);
             using (ListPool<ILifetimeResolver>.Get(out var rrs))
@@ -176,23 +192,33 @@ namespace LinJector.Core
             _id = ++ContainerIdAllocator;
             _parent = parent;
             _children = ListPool<Container>.Get();
+            _eventRegistry = GenericPool<LifetimeEventRegistry>.Get();
+            _eventRegistry.BindContainer(this);
+            // todo: Create _innerMap to create object graph
         }
 
-        private void DisposeShared()
+        public void Initialize()
         {
-            ListPool<Container>.Release(_children);
+            SelfAvailableTest(false);
         }
-        
+
         public void Dispose()
         {
-            DisposedTest();
-            DisposeShared();
-        }
+            SelfAvailableTest(false);
 
-        public async ValueTask DisposeAsync()
-        {
-            DisposedTest();
-            DisposeShared();
+            // Dispose all children first.
+            foreach (var c in _children)
+            {
+                if (c.IsDisposed()) continue;
+                c.Dispose();
+            }
+
+            // Do runtime disposal
+            _eventRegistry.Dispose();
+            GenericPool<LifetimeEventRegistry>.Release(_eventRegistry);
+            ListPool<Container>.Release(_children);
+            
+            // Do object graph disposal
         }
     }
 }
