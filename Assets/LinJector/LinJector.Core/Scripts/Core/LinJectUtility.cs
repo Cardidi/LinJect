@@ -3,7 +3,7 @@ using LinJector.Interface;
 
 namespace LinJector.Core
 {
-    internal static class LinJectUtility
+    public static class LinJectUtility
     {
 
         private static IActivatorFactory _activatorFactory;

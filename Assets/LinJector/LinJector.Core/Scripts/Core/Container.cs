@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using LinJector.Interface;
 using UnityEngine.Pool;
 
@@ -14,9 +13,9 @@ namespace LinJector.Core
     {
         #region StaticMembers
 
-        private static uint ContainerIdAllocator = 0;
-        
-        public static Container Root { get; private set; }
+        private static uint ContainerIdAllocator = 1;
+
+        public static Container SuperEmpty { get; } = new();
         
         #endregion
 
@@ -30,7 +29,7 @@ namespace LinJector.Core
 
         private LifetimeEventRegistry _eventRegistry;
         
-        private Dictionary<Type, Dictionary<object, IList<ILifetimeResolver>>> _innerMap;
+        private Dictionary<Type, Dictionary<object, List<ILifetimeResolver>>> _innerMap;
 
         #region PrivateAPI
 
@@ -136,7 +135,7 @@ namespace LinJector.Core
             }
         }
         
-        public uint ResolveAll(Type type, object id, List<object> results)
+        public uint ResolveAll(Type type, List<object> results, object id = null)
         {
             SelfAvailableTest();
 
@@ -184,26 +183,67 @@ namespace LinJector.Core
                 return count;
             }
         }
+        
+        #endregion
+
+        #region LifecircleControlPrivate
+
+        private void DoPreInitialization()
+        {
+            foreach (var rr in Resolvable().OfType<IConsiderPreInitializeResolver>())
+            {
+                rr.PreInitialize(this);
+            }
+        }
 
         #endregion
-        
-        internal Container(Container parent)
+
+        #region LifecircleControl
+
+        /// <summary>
+        /// Generate a container with elements on this.
+        /// </summary>
+        /// <param name="parent"></param>
+        private Container(Container parent, ContainerBuilder builder)
         {
-            _id = ++ContainerIdAllocator;
+            _id = ContainerIdAllocator++;
             _parent = parent;
+            _initialized = false;
             _children = ListPool<Container>.Get();
             _eventRegistry = GenericPool<LifetimeEventRegistry>.Get();
             _eventRegistry.BindContainer(this);
-            // todo: Create _innerMap to create object graph
+            _innerMap = ContainerBuilder.Get();
+            builder.Generate(_innerMap, parent._innerMap);
+        }
+
+        /// <summary>
+        /// Generate a super-empty container
+        /// </summary>
+        private Container()
+        {
+            _id = 0;
+            _parent = null;
+            _initialized = true;
+            _children = null;
+            _eventRegistry = null;
+            _innerMap = new(); // Super-empty will get NO resolvers.
         }
 
         public void Initialize()
         {
+            if (_initialized || _id == 0) return;
             SelfAvailableTest(false);
+            
+            // Do initialization
+            DoPreInitialization();
+            _eventRegistry.Initialize();
+
+            _initialized = true;
         }
 
         public void Dispose()
         {
+            if (_id == 0) throw LinJectErrors.SuperEmptyContainerDidNotAllowThisOperation();
             SelfAvailableTest(false);
 
             // Dispose all children first.
@@ -215,10 +255,20 @@ namespace LinJector.Core
 
             // Do runtime disposal
             _eventRegistry.Dispose();
+            
+            // Return all objects
+            // DicPool and ListPool will clear all element when release an object.
+            ContainerBuilder.Release(_innerMap);
             GenericPool<LifetimeEventRegistry>.Release(_eventRegistry);
             ListPool<Container>.Release(_children);
             
-            // Do object graph disposal
+            // Unlink all objects for GC
+            _innerMap = null;
+            _children = null;
+            _eventRegistry = null;
+            _parent = null;
         }
+
+        #endregion
     }
 }

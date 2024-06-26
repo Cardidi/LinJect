@@ -4,7 +4,7 @@ using UnityEngine;
 namespace LinJector.Core
 {
     [DisallowMultipleComponent]
-    public class LifetimeEventRaiser : MonoBehaviour
+    internal sealed class LifetimeEventRaiser : MonoBehaviour
     {
         private static LifetimeEventRaiser _instance;
         

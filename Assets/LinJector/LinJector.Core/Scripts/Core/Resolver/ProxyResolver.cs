@@ -1,7 +1,7 @@
 using LinJector.Enum;
 using LinJector.Interface;
 
-namespace LinJector.Core.Resolvers
+namespace LinJector.Core.Resolver
 {
     public class ProxyResolver : ILifetimeResolver, IIgnoreEventResolver
     {

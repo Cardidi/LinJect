@@ -7,9 +7,9 @@ namespace LinJector.Enum
     {
         
         /// <summary>
-        /// Create only one object across this container and it's children recursively.
+        /// Create new object everytime when resolving.
         /// </summary>
-        Singleton,
+        Transient = 0,
         
         /// <summary>
         /// Create different objects for each container and it's children. 
@@ -17,8 +17,8 @@ namespace LinJector.Enum
         Scope,
         
         /// <summary>
-        /// Create new object everytime when resolving.
+        /// Create only one object across this container and it's children recursively.
         /// </summary>
-        Transient,
+        Singleton,
     }
 }

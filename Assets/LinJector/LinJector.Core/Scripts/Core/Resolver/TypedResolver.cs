@@ -2,7 +2,7 @@
 using System.Linq;
 using LinJector.Interface;
 
-namespace LinJector.Core.Resolvers
+namespace LinJector.Core.Resolver
 {
     public struct TypedResolver : IResolver
     {

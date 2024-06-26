@@ -1,8 +1,8 @@
 ﻿using System;
-using LinJector.Core.Resolvers.Base;
+using LinJector.Core.Resolver.Base;
 using LinJector.Interface;
 
-namespace LinJector.Core.Resolvers
+namespace LinJector.Core.Resolver
 {
     public class TypedSingletonResolver : SingletonResolver, IConsiderPreInitializeResolver
     {

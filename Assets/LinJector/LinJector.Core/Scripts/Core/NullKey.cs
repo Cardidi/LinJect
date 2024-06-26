@@ -5,6 +5,6 @@ namespace LinJector.Core
     /// </summary>
     public sealed class NullKey
     {
-        public static NullKey Get { get; } = new NullKey();
+        public static object Get { get; } = new NullKey();
     }
 }

@@ -1,18 +1,17 @@
 using System;
-using LinJector.Core.Resolvers.Base;
-using LinJector.Interface;
+using LinJector.Core.Resolver.Base;
 
-namespace LinJector.Core.Resolvers
+namespace LinJector.Core.Resolver
 {
-    public class ParameterTypedTransientResolver : TransientResolver
+    public class TypedTransientResolver : TransientResolver
     {
         private TypedResolver _resolver;
-        
-        public ParameterTypedTransientResolver(Type type, object[] arguments)
-        {
-            _resolver = TypedResolver.Get(type, arguments);
-        }
 
+        public TypedTransientResolver(Type type)
+        {
+            _resolver = TypedResolver.Get(type);
+        }
+        
         public override object Resolve(Container container)
         {
             return _resolver.Resolve(container);

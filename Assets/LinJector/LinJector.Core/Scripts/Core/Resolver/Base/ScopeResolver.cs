@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
-using LinJector.Enum;
+﻿using LinJector.Enum;
 using LinJector.Interface;
 
-namespace LinJector.Core.Resolvers.Base
+namespace LinJector.Core.Resolver.Base
 {
     public abstract class ScopeResolver : ILifetimeResolver
     {

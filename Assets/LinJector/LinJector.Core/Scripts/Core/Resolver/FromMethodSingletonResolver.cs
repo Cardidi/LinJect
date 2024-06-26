@@ -1,11 +1,12 @@
-using System;
-using LinJector.Core.Resolvers.Base;
+﻿using System;
+using LinJector.Core.Resolver.Base;
 using LinJector.Interface;
 
-namespace LinJector.Core.Resolvers
+namespace LinJector.Core.Resolver
 {
-    public class FromMethodScopeResolver : ScopeResolver, IConsiderPreInitializeResolver
+    public class FromMethodSingletonResolver : SingletonResolver, IConsiderPreInitializeResolver
     {
+
         private Func<Container, object> _activator;
 
         private bool _cached;
@@ -14,7 +15,7 @@ namespace LinJector.Core.Resolvers
 
         private bool _noLazy;
         
-        public FromMethodScopeResolver(bool noLazy, Func<Container, object> activator)
+        public FromMethodSingletonResolver(bool noLazy, Func<Container, object> activator)
         {
             if (activator == null) throw LinJectErrors.TypedResolverCanNotActivate();
             _activator = activator;
@@ -28,12 +29,6 @@ namespace LinJector.Core.Resolvers
                 _cached = true;
                 _result = _activator(container);
             }
-        }
-
-        public override bool Duplicate(out ILifetimeResolver resolver)
-        {
-            resolver = new FromMethodScopeResolver(_noLazy, _activator);
-            return true;
         }
 
         public override object Resolve(Container container)

@@ -1,7 +1,9 @@
 {
     "name": "LinJector.Core",
     "rootNamespace": "LinJector",
-    "references": [],
+    "references": [
+        "GUID:685523144bf7f408d921e08abf7e1720"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

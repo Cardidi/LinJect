@@ -1,6 +1,6 @@
-﻿using LinJector.Core.Resolvers.Base;
+﻿using LinJector.Core.Resolver.Base;
 
-namespace LinJector.Core.Resolvers
+namespace LinJector.Core.Resolver
 {
     public class FromInstanceSingletonResolver : SingletonResolver
     {

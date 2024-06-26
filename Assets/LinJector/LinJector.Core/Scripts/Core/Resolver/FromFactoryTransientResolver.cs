@@ -1,13 +1,13 @@
 using System;
-using LinJector.Core.Resolvers.Base;
+using LinJector.Core.Resolver.Base;
 
-namespace LinJector.Core.Resolvers
+namespace LinJector.Core.Resolver
 {
-    public class FromMethodTransientResolver : TransientResolver
+    public class FromFactoryTransientResolver : TransientResolver
     {
         private Func<Container, object> _activator;
         
-        public FromMethodTransientResolver(Func<Container, object> activator)
+        public FromFactoryTransientResolver(Func<Container, object> activator)
         {
             if (activator == null) throw LinJectErrors.TypedResolverCanNotActivate();
             _activator = activator;

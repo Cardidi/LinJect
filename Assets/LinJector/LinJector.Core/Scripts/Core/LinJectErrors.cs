@@ -21,5 +21,18 @@ namespace LinJector.Core
             return new InvalidProgramException(
                 "There are two resolver relying on each other which make resolving impossible");
         }
+
+        public static InvalidOperationException SuperEmptyContainerDidNotAllowThisOperation()
+        {
+            return new InvalidOperationException(
+                "You are trying to access Super-Empty container and trying to do some reaction, but this " +
+                "operation is not allowed for Super-Empty!");
+        }
+
+        public static InvalidOperationException ContainerBuilderStateInvalid()
+        {
+            return new InvalidOperationException("Trying to start/end the building of container, but the" +
+                                                 "state of container builder seems to be not sync with your call.");
+        }
     }
 }

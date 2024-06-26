@@ -1,16 +1,16 @@
 ﻿using LinJector.Enum;
 using LinJector.Interface;
 
-namespace LinJector.Core.Resolvers.Base
+namespace LinJector.Core.Resolver.Base
 {
-    public abstract class SingletonResolver : ILifetimeResolver
+    public abstract class TransientResolver : ILifetimeResolver, IIgnoreEventResolver
     {
         public CrossContainer CrossContainerStrategy => CrossContainer.Move;
 
         public bool Duplicate(out ILifetimeResolver resolver)
         {
-            resolver = new ProxyResolver(this);
-            return true;
+            resolver = this;
+            return false;
         }
 
         public abstract object Resolve(Container container);

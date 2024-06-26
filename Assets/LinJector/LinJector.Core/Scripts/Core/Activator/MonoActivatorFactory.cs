@@ -6,7 +6,7 @@ using ObjectActivator = LinJector.Interface.IActivatorFactory.ObjectActivator;
 
 namespace LinJector.Core.Activator
 {
-    public class MonoActivatorFactory : IActivatorFactory
+    public sealed class MonoActivatorFactory : IActivatorFactory
     {
         
         public ObjectActivator MakeActivator(Type type, ConstructorInfo constructor, Type[] parameters)
