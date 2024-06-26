@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using Ca2d.Toolkit;
 using LinJector.Core.Binder;
 using LinJector.Enum;
 using LinJector.Interface;
@@ -58,9 +58,9 @@ namespace LinJector.Core
 
         #endregion
 
-        private bool _ready = true;
+        private bool _ready = false;
 
-        public bool Ready
+        internal bool Ready
         {
             get => _ready;
             private set
@@ -94,15 +94,25 @@ namespace LinJector.Core
             Ready = true;
         }
 
+        internal void Reset()
+        {
+            Ready = false;
+        }
+
         internal bool Validate()
         {
             if (Ready == false) throw LinJectErrors.ContainerBuilderStateInvalid();
-            
-            // If any binder is not valid?
-            if (_resolverBinders.Any(p => !p.Validate()) || 
-                _typeBinders.Any(p => !p.Validate()) ||
-                _aliasBinders.Any(p => !p.Validate())) 
+
+            try
+            {
+                using (ListPool<BindingKey>.Get(out var ks))
+                    CollectBindings(ks);
+            }
+            catch (Exception e)
+            {
+                DebugLogg.Error(e);
                 return false;
+            }
 
             return true;
         }
@@ -155,12 +165,12 @@ namespace LinJector.Core
                     var val = 0;
                     
                     // Left guy
-                    if (l.Id == NullKey.Get) val++;
-                    if (l.IsParent) val--;
+                    if (l.Id == NullKey.Get) val--;
+                    if (l.IsParent) val++;
                     
                     // Right guy -> reverse of Left guy
-                    if (r.Id == NullKey.Get) val--;
-                    if (r.IsParent) val++;
+                    if (r.Id == NullKey.Get) val++;
+                    if (r.IsParent) val--;
                     
                     return val;
                 });
@@ -191,8 +201,14 @@ namespace LinJector.Core
             }
         }
 
-        private void CollectBindings(List<BindingKey> areas)
+        private void CollectBindings(List<BindingKey> keys)
         {
+            // If any binder is not valid?
+            if (_resolverBinders.Any(p => !p.Validate()) ||
+                _typeBinders.Any(p => !p.Validate()) ||
+                _aliasBinders.Any(p => !p.Validate()))
+                throw new InvalidProgramException("May contains an invalid buiding target!");
+            
             using (DictionaryPool<Type, Dictionary<object, List<ResolverBinder>>>.Get(out var cache))
             {
                 try
@@ -200,9 +216,6 @@ namespace LinJector.Core
                     // Create basic type binders.
                     foreach (var tb in _typeBinders)
                     {
-                        if (!tb.Validate())
-                            throw new InvalidDataException("Type binder did not set properly!");
-
                         if (!cache.TryGetValue(tb.From, out var dict))
                         {
                             dict = DictionaryPool<object, List<ResolverBinder>>.Get();
@@ -248,6 +261,7 @@ namespace LinJector.Core
                                     }
                         
                                     rrs.AddRange(orrs);
+                                    turns.Add(ab);
                                 }
                             }
                                 
@@ -270,7 +284,7 @@ namespace LinJector.Core
                             foreach (var r in aaMap.Value)
                             {
                                 gen.Resolver = r;
-                                areas.Add(gen);
+                                keys.Add(gen);
                             }
                         }
                     }
@@ -320,7 +334,7 @@ namespace LinJector.Core
 
         private List<AliasBinder> _aliasBinders = new();
 
-        internal ResolverBinder CreateResolverBinder(Lifetime lifetime = Lifetime.Transient)
+        public ResolverBinder CreateResolverBinder(Lifetime lifetime = Lifetime.Transient)
         {
             if (Ready == false) throw LinJectErrors.ContainerBuilderStateInvalid();
             
@@ -332,7 +346,7 @@ namespace LinJector.Core
             return binder;
         }
 
-        internal TypeBinder CreateTypeBinder(Type from, ResolverBinder to)
+        public TypeBinder CreateTypeBinder(Type from, ResolverBinder to)
         {
             if (Ready == false) throw LinJectErrors.ContainerBuilderStateInvalid();
 
@@ -345,7 +359,7 @@ namespace LinJector.Core
             return binder;
         }
         
-        internal AliasBinder CreateAliasBinder(Type from, Type to)
+        public AliasBinder CreateAliasBinder(Type from, Type to)
         {
             if (Ready == false) throw LinJectErrors.ContainerBuilderStateInvalid();
 

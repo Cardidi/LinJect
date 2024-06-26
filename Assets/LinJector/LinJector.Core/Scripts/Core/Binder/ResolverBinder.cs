@@ -6,26 +6,26 @@ using LinJector.Interface;
 
 namespace LinJector.Core.Binder
 {
-    internal class ResolverBinder
+    public class ResolverBinder
     {
 
         public delegate ILifetimeResolver ResolverGenerator();
 
         /* Object source */
         
-        internal Lifetime Lifetime;
+        public Lifetime Lifetime;
         
-        internal Type To;
+        public Type To;
         
-        internal Func<Container, object> Activator;
+        public Func<Container, object> Activator;
 
-        internal object Instance;
+        public object Instance;
         
         /* Additional Info */
         
-        internal bool Lazy;
+        public bool Lazy;
         
-        internal object[] Parameter;
+        public object[] Parameter;
 
         internal bool Validate()
         {

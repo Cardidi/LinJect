@@ -4,17 +4,17 @@ namespace LinJector.Core.Binder
 {
     public class AliasBinder
     {
-        internal Type From;
+        public Type From;
 
-        internal object Id;
+        public object Id;
 
-        internal Type To;
+        public Type To;
 
-        internal object ToId;
+        public object ToId;
 
         internal bool Validate()
         {
-            return From != null && To != null;
+            return From != null && To != null && From != To;
         }
 
         internal void MakeReady()

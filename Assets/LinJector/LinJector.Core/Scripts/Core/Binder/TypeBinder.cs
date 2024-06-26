@@ -2,13 +2,13 @@ using System;
 
 namespace LinJector.Core.Binder
 {
-    internal class TypeBinder
+    public class TypeBinder
     {
-        internal Type From;
+        public Type From;
 
-        internal object Id;
+        public object Id;
 
-        internal ResolverBinder Resolver;
+        public ResolverBinder Resolver;
 
         internal bool Validate()
         {

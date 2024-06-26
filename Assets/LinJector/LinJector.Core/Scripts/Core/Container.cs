@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using LinJector.Interface;
+using UnityEngine.Assertions;
 using UnityEngine.Pool;
 
 namespace LinJector.Core
@@ -15,7 +16,14 @@ namespace LinJector.Core
 
         private static uint ContainerIdAllocator = 1;
 
+        public delegate void ContainerBuilderCallback(Container parent, ContainerBuilder builder);
+
         public static Container SuperEmpty { get; } = new();
+
+        public static Container Create(ContainerBuilderCallback build, bool autoInit = true)
+        {
+            return SuperEmpty.CreateChild(build, autoInit);
+        }
         
         #endregion
 
@@ -183,6 +191,31 @@ namespace LinJector.Core
                 return count;
             }
         }
+
+        public Container CreateChild(ContainerBuilderCallback build, bool autoInit = true)
+        {
+            SelfAvailableTest();
+            Assert.IsNotNull(build);
+
+            using (GenericPool<ContainerBuilder>.Get(out var builder))
+            {
+                Container c;
+                try
+                {
+                    builder.Prepare(this);
+                    build.Invoke(this, builder);
+                    c = new Container(this, builder);
+                }
+                finally
+                {
+                    builder.Reset();
+                }
+                
+                _children?.Add(c);
+                if (autoInit) c.Initialize();
+                return c;
+            }
+        }
         
         #endregion
 
@@ -203,7 +236,6 @@ namespace LinJector.Core
         /// <summary>
         /// Generate a container with elements on this.
         /// </summary>
-        /// <param name="parent"></param>
         private Container(Container parent, ContainerBuilder builder)
         {
             _id = ContainerIdAllocator++;
