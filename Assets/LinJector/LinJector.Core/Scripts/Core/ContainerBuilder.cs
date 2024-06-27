@@ -63,14 +63,7 @@ namespace LinJector.Core
         internal bool Ready
         {
             get => _ready;
-            private set
-            {
-                if (value != _ready)
-                {
-                    _ready = value;
-                    if (value == true) Cleanup();
-                }
-            }
+            private set => _ready = value;
         }
 
         public Container Parent { get; private set; }
@@ -84,18 +77,20 @@ namespace LinJector.Core
             
             _typeBinders.Clear();
             _resolverBinders.Clear();
+            _aliasBinders.Clear();
         }
         
         internal void Prepare(Container parent)
         {
             Assert.IsNotNull(parent);
-            if (Ready == true) throw LinJectErrors.ContainerBuilderStateInvalid();
+            if (Ready) throw LinJectErrors.ContainerBuilderStateInvalid();
             Parent = parent;
             Ready = true;
         }
 
         internal void Reset()
         {
+            Cleanup();
             Ready = false;
         }
 
