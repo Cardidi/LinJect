@@ -211,7 +211,7 @@ namespace LinJector.Core
                     builder.Reset();
                 }
                 
-                _children?.Add(c);
+                _children.Add(c);
                 if (autoInit) c.Initialize();
                 return c;
             }
@@ -256,7 +256,7 @@ namespace LinJector.Core
             _id = 0;
             _parent = null;
             _initialized = true;
-            _children = null;
+            _children = new List<Container>();
             _eventRegistry = null;
             _innerMap = new(); // Super-empty will get NO resolvers.
         }
@@ -279,13 +279,18 @@ namespace LinJector.Core
             SelfAvailableTest(false);
 
             // Dispose all children first.
-            foreach (var c in _children)
+            using (ListPool<Container>.Get(out var chs))
             {
-                if (c.IsDisposed()) continue;
-                c.Dispose();
+                chs.AddRange(_children);
+                foreach (var c in chs)
+                {
+                    if (c.IsDisposed()) continue;
+                    c.Dispose();
+                }
             }
 
             // Do runtime disposal
+            _parent._children.Remove(this);
             _eventRegistry.Dispose();
             
             // Return all objects
