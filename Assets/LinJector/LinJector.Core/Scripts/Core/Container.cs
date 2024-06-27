@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using LinJector.Interface;
+using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Pool;
 
@@ -242,8 +243,14 @@ namespace LinJector.Core
             _parent = parent;
             _initialized = false;
             _children = ListPool<Container>.Get();
+#if UNITY_EDITOR
+            if (Application.isPlaying){
+#endif
             _eventRegistry = GenericPool<LifetimeEventRegistry>.Get();
             _eventRegistry.BindContainer(this);
+#if UNITY_EDITOR
+            }
+#endif
             _innerMap = ContainerBuilder.Get();
             builder.Generate(_innerMap, parent._innerMap);
         }
@@ -268,8 +275,14 @@ namespace LinJector.Core
             
             // Do initialization
             DoPreInitialization();
+            
+#if UNITY_EDITOR
+            if (Application.isPlaying){
+#endif
             _eventRegistry.Initialize();
-
+#if UNITY_EDITOR
+            }
+#endif
             _initialized = true;
         }
 
@@ -291,13 +304,25 @@ namespace LinJector.Core
 
             // Do runtime disposal
             _parent._children.Remove(this);
-            _eventRegistry.Dispose();
             
+#if UNITY_EDITOR
+            if (Application.isPlaying){
+#endif
+            _eventRegistry.Dispose();
+#if UNITY_EDITOR
+            }
+#endif
             // Return all objects
             // DicPool and ListPool will clear all element when release an object.
             ContainerBuilder.Release(_innerMap);
-            GenericPool<LifetimeEventRegistry>.Release(_eventRegistry);
             ListPool<Container>.Release(_children);
+#if UNITY_EDITOR
+            if (Application.isPlaying){
+#endif
+            GenericPool<LifetimeEventRegistry>.Release(_eventRegistry);
+#if UNITY_EDITOR
+            }
+#endif
             
             // Unlink all objects for GC
             _innerMap = null;
