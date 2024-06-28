@@ -26,8 +26,8 @@ public class ValueTypeBindingTester
     public void NonGenericValueInstanceResolve()
     {
         var c = CreateValueTestInstanceContainer();
-        Assert.IsTrue(c.Resolve<int>() == 10, "NoID test failure!");
-        Assert.IsTrue(c.Resolve<int>("Test Int") == 20, "WithID test failure!");
+        Assert.IsTrue(c.Resolve<int>(0) == 10, "NoID test failure!");
+        Assert.IsTrue(c.Resolve<int>(0, "Test Int") == 20, "WithID test failure!");
     }
     
     
@@ -77,8 +77,8 @@ public class ValueTypeBindingTester
     public void NonGenericValueInstanceSubContainerResolve()
     {
         var c = CreateSubValueTestInstanceContainer();
-        Assert.IsTrue(c.Resolve<int>() == 30, "NoID test failure!");
-        Assert.IsTrue(c.Resolve<int>("Test Int") == 40, "WithID test failure!");
+        Assert.IsTrue(c.Resolve<int>(0) == 30, "NoID test failure!");
+        Assert.IsTrue(c.Resolve<int>(0, "Test Int") == 40, "WithID test failure!");
     }
     
     
