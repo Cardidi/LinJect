@@ -11,7 +11,7 @@ namespace LinJector.Core
     /// <summary>
     /// Data Structure which provides immutable object graph and dependency searcher.
     /// </summary>
-    public sealed class Container : IDisposable
+    public sealed class Container : IDisposable, IServiceProvider
     {
         #region StaticMembers
 
@@ -131,6 +131,21 @@ namespace LinJector.Core
             if (TakeResolver(type, id, out var target)) return target.Resolve(this);
             return default(object);
         }
+
+
+        public bool TryResolve(out object result, Type type, object id = null)
+        {
+            SelfAvailableTest();
+
+            if (TakeResolver(type, id, out var target))
+            {
+                result = target.Resolve(this);
+                return true;
+            }
+
+            result = null;
+            return false;
+        }
         
         public object[] ResolveAll(Type type, object id = null)
         {
@@ -157,13 +172,38 @@ namespace LinJector.Core
             }
         }
         
-        public T Resolve<T>(object id = null)
+        public T Resolve<T>(object id = null) where T : class
         {
             SelfAvailableTest();
 
             var type = typeof(T);
             if (TakeResolver(type, id, out var target)) return target.Resolve<T>(this);
             return default(T);
+        }
+        
+        public T Resolve<T>(T fallback, object id = null) where T : struct
+        {
+            SelfAvailableTest();
+
+            var type = typeof(T);
+            if (TakeResolver(type, id, out var target)) return target.Resolve<T>(this);
+            return fallback;
+        }
+        
+        
+        public bool TryResolve<T>(out T result, object id = null)
+        {
+            SelfAvailableTest();
+
+            var type = typeof(T);
+            if (TakeResolver(type, id, out var target))
+            {
+                result = target.Resolve<T>(this);
+                return true;
+            }
+
+            result = default;
+            return false;
         }
         
         public T[] ResolveAll<T>(object id = null)
@@ -329,6 +369,15 @@ namespace LinJector.Core
             _children = null;
             _eventRegistry = null;
             _parent = null;
+        }
+
+        #endregion
+
+        #region Compability
+
+        public object GetService(Type serviceType)
+        {
+            return Resolve(serviceType);
         }
 
         #endregion

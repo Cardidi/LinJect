@@ -128,6 +128,7 @@ namespace LinJector.Core
                     ActivateBindings(foreheads, results);
                 }
                 
+                // todo: move binding copying before alias resolver collection. 
                 // Copy previous bindings
                 foreach (var type2Area in parentMap)
                 {
