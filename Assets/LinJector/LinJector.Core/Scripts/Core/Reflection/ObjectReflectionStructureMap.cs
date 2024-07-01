@@ -237,7 +237,7 @@ namespace LinJector.Core.Reflection
             using (ListPool<Type>.Get(out var argTypes))
             {
                 argTypes.AddRange(arguments.Where(a => a != null).Select(a => a.GetType()));
-                var bestfitArgumentsCount = 0;
+                var bestfitArgumentsCount = -1;
                 InjectiveMethodBase bestfitMethod = null;
 
                 var selector = excludeInjectAtt
@@ -254,7 +254,7 @@ namespace LinJector.Core.Reflection
                         if (p.RequestedType.IsAssignableFrom(matchType)) idx++;
                     }
 
-                    if (idx < bestfitArgumentsCount) continue;
+                    if (idx <= bestfitArgumentsCount) continue;
                     bestfitArgumentsCount = idx;
                     bestfitMethod = b;
                 }
