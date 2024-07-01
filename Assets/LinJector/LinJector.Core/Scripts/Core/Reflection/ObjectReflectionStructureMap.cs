@@ -244,9 +244,7 @@ namespace LinJector.Core.Reflection
                     ? Methods.Where(m => m.IsConstructor && !m.MarkAsInjection)
                     : Methods.Where(m => m.IsConstructor);
                 
-                foreach (var b in selector
-                             .Where(m => m.Parameters.Length > 0)
-                             .Where(m => m.IsConstructor))
+                foreach (var b in selector.Where(m => m.Parameters.Length > 0))
                 {
                     var idx = 0;
                     foreach (var p in b.Parameters)
@@ -256,11 +254,9 @@ namespace LinJector.Core.Reflection
                         if (p.RequestedType.IsAssignableFrom(matchType)) idx++;
                     }
 
-                    if (idx > bestfitArgumentsCount)
-                    {
-                        bestfitArgumentsCount = idx;
-                        bestfitMethod = b;
-                    }
+                    if (idx < bestfitArgumentsCount) continue;
+                    bestfitArgumentsCount = idx;
+                    bestfitMethod = b;
                 }
 
                 return bestfitMethod;

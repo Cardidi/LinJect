@@ -25,7 +25,7 @@ namespace LinJector.Core
         public static InvalidProgramException DependencyUnsatisfied()
         {
             return new InvalidProgramException(
-                "There are two resolver relying on each other which make resolving impossible");
+                "Can not found targeting dependency.");
         }
 
         public static InvalidOperationException SuperEmptyContainerDidNotAllowThisOperation()

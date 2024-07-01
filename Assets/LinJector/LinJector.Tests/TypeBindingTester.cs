@@ -26,7 +26,7 @@ public class TypeBindingTester
     {
         var c = Container.Create((parent, container) =>
         {
-            container.Bind<UnitTest_PublicConstructor>().ToSelf();
+            container.Bind<UnitTest_PublicConstructor>().ToSelf(20);
         });
 
         var t1 = c.Resolve<UnitTest_PublicConstructor>();
@@ -41,6 +41,7 @@ public class TypeBindingTester
     {
         var c = Container.Create((parent, container) =>
         {
+            container.Bind<int>().ToInstance(1);
             container.Bind<UnitTest_PublicConstructor>().ToSelf();
         }).CreateChild((_, _) => {});
 
@@ -80,6 +81,7 @@ public class TypeBindingTester
     {
         var c = Container.Create((parent, container) =>
         {
+            container.Bind<int>().ToInstance(10);
             container.Bind<UnitTest_PublicConstructor>().ToSelf().AsSingleton();
         });
 
@@ -94,7 +96,7 @@ public class TypeBindingTester
     {
         var c = Container.Create((parent, container) =>
         {
-            container.Bind<UnitTest_PublicConstructor>().ToSelf().AsSingleton();
+            container.Bind<UnitTest_PublicConstructor>().ToSelf(20).AsSingleton();
         });
 
         var t1 = c.Resolve<UnitTest_PublicConstructor>();
@@ -138,12 +140,14 @@ public class TypeBindingTester
     {
         var c = Container.Create((parent, container) =>
         {
-            container.Bind<UnitTest_PublicConstructor>().ToSelf().AsScoped();
+            container.Bind<int>().ToInstance(10);
+            container.Bind<UnitTest_PublicConstructor>().ToSelf(5).AsScoped();
         });
 
         var t1 = c.Resolve<UnitTest_PublicConstructor>();
         var t2 = c.CreateChild((_,_) => {}).Resolve<UnitTest_PublicConstructor>();
             
+        Assert.AreEqual(t1.Counter, 5);
         Assert.IsFalse(t1 == t2, "Scoped test failed!");
     }
         
