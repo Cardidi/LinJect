@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using LinJector.Interface;
 using UnityEngine.Pool;
 
@@ -8,7 +9,7 @@ namespace LinJector.Core.Reflection
     /// <summary>
     /// Object injection information for next-step dependency resolver to get the right generate or inject path.
     /// </summary>
-    public sealed class ObjectInjectionMap
+    public sealed class ObjectInjectionMap : IDisposable
     {
         public struct ArgumentProvider
         {
@@ -33,7 +34,7 @@ namespace LinJector.Core.Reflection
         {
             ContextContainer = context;
             Structure = ObjectReflectionStructureMap.Analyse(objectType);
-            _rrCaches = new();
+            _rrCaches = DictionaryPool<string, ILifetimeResolver>.Get();
 
             // Start injection resolving...
             foreach (var v in Structure.Values)
@@ -51,10 +52,20 @@ namespace LinJector.Core.Reflection
             }
             
             // Cache for non-ctor injection method
-            _nonConstructorInjector = Structure.SearchBestInjectionMethod(ContextContainer.RegisteredTypes);
+            _nonConstructorInjector = Structure.SearchInjectionMethod(ContextContainer.RegisteredTypes);
             if (_nonConstructorInjector != null)
             {
+                _nonConstructorInjectorArguments = ListPool<ArgumentProvider>.Get();
+                GetUnsatisfiedMethodArguments(_nonConstructorInjector, _nonConstructorInjectorArguments);
             }
+        }
+        
+        
+        public void Dispose()
+        {
+            DictionaryPool<string, ILifetimeResolver>.Release(_rrCaches);
+            if (_nonConstructorInjectorArguments != null)
+                ListPool<ArgumentProvider>.Release(_nonConstructorInjectorArguments);
         }
         
         /// <summary>
@@ -71,34 +82,74 @@ namespace LinJector.Core.Reflection
 
         private InjectiveMethodBase _nonConstructorInjector;
 
-        private ArgumentProvider[] _nonConstructorInjectorArguments;
+        private List<ArgumentProvider> _nonConstructorInjectorArguments;
 
-        // private void GetUnsatisfiedMethodArguments(
-        //     InjectiveMethodBase methodData, IList<ArgumentProvider> providers)
-        // {
-        //     var p = methodData.Parameters;
-        //     for (int i = 0; i < p.Length; i++)
-        //     {
-        //         var pProv = p[i];
-        //         ArgumentProvider arg = default;
-        //         
-        //         var isOutOfBounds = i >= providers.Count;
-        //         bool insertNew = false;
-        //
-        //         if (isOutOfBounds)
-        //         {
-        //             if (pProv.Injective)
-        //             {
-        //                 
-        //             }
-        //         }
-        //         
-        //
-        //         if (isOutOfBounds) providers.Add(arg);
-        //         else if (insertNew) providers.Insert(i, arg);
-        //         else providers[i] = arg;
-        //     }
-        // }
+        public void GetUnsatisfiedMethodArguments(
+            InjectiveMethodBase methodData, IList<ArgumentProvider> providers)
+        {
+            var p = methodData.Parameters;
+            for (int i = 0; i < p.Length; i++)
+            {
+                var param = p[i];
+                ArgumentProvider arg = default;
+                
+                var isOutOfBounds = i >= providers.Count;
+                bool insertNew = false;
+
+                void TryResolve(ref ArgumentProvider ap)
+                {
+                    if (ContextContainer.TakeResolver(param.RequestedType, param.Id, out var rr))
+                    {
+                        ap = new ArgumentProvider(rr, true);
+                        return;
+                    }
+                    
+                    if (param.IsInjectionOptional || param.IsParameterOptional)
+                    {
+                        ap = new ArgumentProvider(param.IsParameterOptional ? Type.Missing : null);
+                        return;
+                    }
+                    
+                    throw LinJectErrors.DependencyUnsatisfied();
+                }
+        
+                if (isOutOfBounds)
+                {
+                    TryResolve(ref arg);
+                }
+                else
+                {
+                    var refArg = providers[i];
+                    if (refArg.Existed == null)
+                    {
+                        // Arg is not existed
+                        if (param.Injective) TryResolve(ref arg);
+                        else arg = refArg;
+                    }
+                    else
+                    {
+                        // Arg is existed
+                        var argType = refArg.Existed.GetType();
+                        if (param.RequestedType.IsAssignableFrom(argType))
+                        {
+                            // Parameter and argument are matched;
+                            arg = refArg;
+                        }
+                        else
+                        {
+                            // Not Matched: May position wrong...
+                            // So consider inject this position.
+                            insertNew = true;
+                            TryResolve(ref arg);
+                        }
+                    }
+                }
+                
+                if (isOutOfBounds) providers.Add(arg);
+                else if (insertNew) providers.Insert(i, arg);
+                else providers[i] = arg;
+            }
+        }
         
         /// <summary>
         /// Try to get a resolver for this injection map.
@@ -108,6 +159,41 @@ namespace LinJector.Core.Reflection
             return _rrCaches.TryGetValue(fieldName, out resolver);
         }
 
-        public InjectiveMethodBase GetNonCtorInjectionMethod() => _nonConstructorInjector;
+        /// <summary>
+        /// Try read the injection target which is beyonds of constructor.
+        /// </summary>
+        public bool TryGetNonCtorInjectionMethod(out InjectiveMethodBase method, IList<ArgumentProvider> args)
+        {
+            if (_nonConstructorInjector == null)
+            {
+                method = null;
+                return false;
+            }
+            
+            method = _nonConstructorInjector;
+            foreach (var a in _nonConstructorInjectorArguments)
+                args.Add(a);
+            
+            return true;
+        }
+
+        /// <summary>
+        /// Try read the constructor with best selection
+        /// </summary>
+        public void GetConstructor(out InjectiveMethodBase method, IList<ArgumentProvider> args)
+        {
+            var ctor = Structure.SearchConstructor(
+                _nonConstructorInjector != null,
+                args.Select(p => p.Existed).ToArray());
+
+            if (ctor == null)
+            {
+                method = Structure.SearchDefaultConstructor();
+                return;
+            }
+
+            method = ctor;
+            GetUnsatisfiedMethodArguments(ctor, args);
+        }
     }
 }

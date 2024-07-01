@@ -4,10 +4,16 @@ using LinJector.Interface;
 
 namespace LinJector.Core.Resolver
 {
-    public class ParameterTypedScopeResolver : ScopeResolver, IConsiderPreInitializeResolver
+    public class ParameterTypedScopeResolver : ScopeResolver, IConsiderPostInitializeResolver
     {
+        private bool _inited;
+        
         private TypedResolver _resolver;
+        
+        private Type _type;
 
+        private object[] _arguments;
+        
         private bool _cached;
         
         private object _result;
@@ -16,14 +22,17 @@ namespace LinJector.Core.Resolver
         
         public ParameterTypedScopeResolver(bool noLazy, Type type, object[] arguments)
         {
-            _resolver = TypedResolver.Get(type, arguments);
+            _type = type;
+            _arguments = arguments;
             _noLazy = noLazy;
         }
 
-        private ParameterTypedScopeResolver(bool noLazy, TypedResolver resolver)
+        private ParameterTypedScopeResolver(bool noLazy, Type type, TypedResolver resolver)
         {
+            _inited = true;
             _resolver = resolver;
             _noLazy = noLazy;
+            _type = type;
         }
 
         private void MakeResolvable(Container container)
@@ -37,7 +46,7 @@ namespace LinJector.Core.Resolver
 
         public override bool Duplicate(out ILifetimeResolver resolver)
         {
-            resolver = new ParameterTypedScopeResolver(_noLazy, _resolver);
+            resolver = new ParameterTypedScopeResolver(_noLazy, _type, _resolver);
             return true;
         }
 
@@ -53,8 +62,15 @@ namespace LinJector.Core.Resolver
             return (T) _result;
         }
         
-        public void PreInitialize(Container container)
+
+        public void PostInitialize(Container container)
         {
+            if (!_inited)
+            {
+                _inited = true;
+                _resolver = new TypedResolver(container, _type, _arguments);
+            }
+            
             if (_noLazy) MakeResolvable(container);
         }
     }

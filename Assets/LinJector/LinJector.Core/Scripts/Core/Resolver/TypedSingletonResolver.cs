@@ -4,9 +4,13 @@ using LinJector.Interface;
 
 namespace LinJector.Core.Resolver
 {
-    public class TypedSingletonResolver : SingletonResolver, IConsiderPreInitializeResolver
+    public class TypedSingletonResolver : SingletonResolver, IConsiderPostInitializeResolver
     {
+        private bool _inited;
+        
         private TypedResolver _resolver;
+        
+        private Type _type;
 
         private bool _cached;
         
@@ -16,7 +20,7 @@ namespace LinJector.Core.Resolver
         
         public TypedSingletonResolver(bool noLazy, Type type)
         {
-            _resolver = TypedResolver.Get(type);
+            _type = type;
             _noLazy = noLazy;
         }
 
@@ -41,8 +45,15 @@ namespace LinJector.Core.Resolver
             return (T) _result;
         }
         
-        public void PreInitialize(Container container)
+
+        public void PostInitialize(Container container)
         {
+            if (!_inited)
+            {
+                _inited = true;
+                _resolver = new TypedResolver(container, _type, Array.Empty<object>());
+            }
+            
             if (_noLazy) MakeResolvable(container);
         }
     }

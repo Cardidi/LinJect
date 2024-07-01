@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Ca2d.Toolkit;
 using LinJector.Interface;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -25,6 +26,10 @@ namespace LinJector.Core
         {
             return SuperEmpty.CreateChild(build, autoInit);
         }
+
+        public static event Action<Container> OnContainerHasCreated; 
+        
+        public static event Action<Container> OnContainerWillDispose;
         
         #endregion
 
@@ -282,6 +287,7 @@ namespace LinJector.Core
                 
                 _children.Add(c);
                 if (autoInit) c.Initialize();
+
                 return c;
             }
         }
@@ -295,6 +301,14 @@ namespace LinJector.Core
             foreach (var rr in Resolvable().OfType<IConsiderPreInitializeResolver>())
             {
                 rr.PreInitialize(this);
+            }
+        }
+        
+        private void DoPostInitialization()
+        {
+            foreach (var rr in Resolvable().OfType<IConsiderPostInitializeResolver>())
+            {
+                rr.PostInitialize(this);
             }
         }
 
@@ -341,7 +355,6 @@ namespace LinJector.Core
             if (_initialized || _id == 0) return;
             SelfAvailableTest(false);
             
-            // Do initialization
             DoPreInitialization();
             
 #if UNITY_EDITOR
@@ -351,14 +364,19 @@ namespace LinJector.Core
 #if UNITY_EDITOR
             }
 #endif
+
             _initialized = true;
+            if (OnContainerHasCreated != null) Guard.IgnoreException(OnContainerHasCreated, this);
+            DoPostInitialization();
         }
 
         public void Dispose()
         {
             if (_id == 0) throw LinJectErrors.SuperEmptyContainerDidNotAllowThisOperation();
             SelfAvailableTest(false);
-
+            
+            if (OnContainerWillDispose != null) Guard.IgnoreException(OnContainerWillDispose, this);
+            
             // Dispose all children first.
             using (ListPool<Container>.Get(out var chs))
             {

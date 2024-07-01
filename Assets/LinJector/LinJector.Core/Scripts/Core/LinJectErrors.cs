@@ -37,8 +37,14 @@ namespace LinJector.Core
 
         public static InvalidOperationException ContainerBuilderStateInvalid()
         {
-            return new InvalidOperationException("Trying to start/end the building of container, but the" +
+            return new InvalidOperationException("Trying to start/end the building of container, but the " +
                                                  "state of container builder seems to be not sync with your call.");
+        }
+
+        public static InvalidOperationException ContainerNotReady()
+        {
+            return new InvalidOperationException("Trying to did things on container, but container seems to be " +
+                                                 "broken or uninitialized.");
         }
     }
 }

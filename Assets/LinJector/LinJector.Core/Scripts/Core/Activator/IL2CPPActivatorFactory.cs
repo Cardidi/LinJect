@@ -8,7 +8,7 @@ namespace LinJector.Core.Activator
 {
     public sealed class IL2CPPActivatorFactory : IActivatorFactory
     {
-        public ObjectActivator MakeActivator(Type type, ConstructorInfo constructor, Type[] parameters)
+        public ObjectActivator MakeActivator(Type type, ConstructorInfo constructor)
         {
             return (call, args) =>
             {

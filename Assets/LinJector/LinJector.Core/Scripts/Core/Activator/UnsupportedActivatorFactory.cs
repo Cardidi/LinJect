@@ -10,7 +10,7 @@ namespace LinJector.Core.Activator
             "Activator is trying to create new object on this platform but unfortunately that this platform " +
             "is unsupported.");
         
-        public IActivatorFactory.ObjectActivator MakeActivator(Type type, ConstructorInfo constructor, Type[] parameters)
+        public IActivatorFactory.ObjectActivator MakeActivator(Type type, ConstructorInfo constructor)
         {
             return Error;
         }

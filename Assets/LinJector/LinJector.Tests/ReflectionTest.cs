@@ -147,9 +147,9 @@ public class ReflectionTest
         var test = (PrivateConstructor) RuntimeHelpers.GetUninitializedObject(t);
         
         var m = ObjectReflectionStructureMap.Analyse(t);
-        var c = m.SearchBestConstructor(false, new object[]{"abc"});
+        var c = m.SearchConstructor(false, new object[]{"abc"});
 
-        c.Invoke(test, "abc");
+        c.Invoke(test, new object[]{"abc"});
         
         Assert.AreEqual(5, test.Result);
     }
@@ -162,9 +162,9 @@ public class ReflectionTest
         var test = (PrivateConstructor) RuntimeHelpers.GetUninitializedObject(t);
         
         var m = ObjectReflectionStructureMap.Analyse(t);
-        var c = m.SearchBestConstructor(true, new object[]{"abc"});
+        var c = m.SearchConstructor(true, new object[]{"abc"});
 
-        c.Invoke(test, "abc");
+        c.Invoke(test, new object[]{"abc"});
         
         Assert.AreEqual(5, test.Result);
     }
@@ -190,7 +190,7 @@ public class ReflectionTest
         var test = (PrivateConstructor) RuntimeHelpers.GetUninitializedObject(t);
         
         var m = ObjectReflectionStructureMap.Analyse(t);
-        var c = m.SearchBestConstructor(false, Array.Empty<object>());
+        var c = m.SearchConstructor(false, Array.Empty<object>());
 
         Assert.IsNull(c);
     }
@@ -213,9 +213,9 @@ public class ReflectionTest
         var test = (PrivateConstructor) RuntimeHelpers.GetUninitializedObject(t);
         
         var m = ObjectReflectionStructureMap.Analyse(t);
-        var c = m.SearchBestConstructor(false, new object[]{(int)1});
+        var c = m.SearchConstructor(false, new object[]{(int)1});
 
-        c.Invoke(test, 1);
+        c.Invoke(test, new object[]{1});
         
         Assert.AreEqual(2, test.Result);
     }
@@ -226,7 +226,7 @@ public class ReflectionTest
         var t = typeof(PrivateConstructor);
         
         var m = ObjectReflectionStructureMap.Analyse(t);
-        var c = m.SearchBestConstructor(true, new object[]{(int)1});
+        var c = m.SearchConstructor(true, new object[]{(int)1});
 
         Assert.IsNull(c);
     }
@@ -238,9 +238,9 @@ public class ReflectionTest
         var test = (PrivateConstructor) RuntimeHelpers.GetUninitializedObject(t);
         
         var m = ObjectReflectionStructureMap.Analyse(t);
-        var c = m.SearchBestConstructor(false, new object[]{(int)1, (int)1});
+        var c = m.SearchConstructor(false, new object[]{(int)1, (int)1});
 
-        c.Invoke(test, 1, 1);
+        c.Invoke(test, new object[]{1, 1});
         
         Assert.AreEqual(3, test.Result);
     }
@@ -251,7 +251,7 @@ public class ReflectionTest
         var t = typeof(PrivateConstructor);
         
         var m = ObjectReflectionStructureMap.Analyse(t);
-        var c = m.SearchBestConstructor(true, new object[]{(int)1, (int)1});
+        var c = m.SearchConstructor(true, new object[]{(int)1, (int)1});
 
         Assert.IsNull(c);
     }
@@ -263,9 +263,9 @@ public class ReflectionTest
         var test = (PrivateConstructor) RuntimeHelpers.GetUninitializedObject(t);
         
         var m = ObjectReflectionStructureMap.Analyse(t);
-        var c = m.SearchBestConstructor(false, new object[]{(int)1, (bool)false});
+        var c = m.SearchConstructor(false, new object[]{(int)1, (bool)false});
 
-        c.Invoke(test, 1, false);
+        c.Invoke(test, new object[]{1, false});
         
         Assert.AreEqual(4, test.Result);
     }
@@ -276,7 +276,7 @@ public class ReflectionTest
         var t = typeof(PrivateConstructor);
         
         var m = ObjectReflectionStructureMap.Analyse(t);
-        var c = m.SearchBestConstructor(true, new object[]{(int)1, false});
+        var c = m.SearchConstructor(true, new object[]{(int)1, false});
 
         Assert.IsNull(c);
     }
@@ -288,9 +288,9 @@ public class ReflectionTest
         var test = (PrivateConstructor) RuntimeHelpers.GetUninitializedObject(t);
         
         var m = ObjectReflectionStructureMap.Analyse(t);
-        var c = m.SearchBestConstructor(false, new object[]{false, (int)1});
+        var c = m.SearchConstructor(false, new object[]{false, (int)1});
 
-        c.Invoke(test, 1, false);
+        c.Invoke(test, new object[]{1, false});
         
         Assert.AreEqual(4, test.Result);
     }
@@ -345,7 +345,7 @@ public class ReflectionTest
         var test = (PublicConstructor) RuntimeHelpers.GetUninitializedObject(t);
         
         var m = ObjectReflectionStructureMap.Analyse(t);
-        var c = m.SearchBestConstructor(false, Array.Empty<object>());
+        var c = m.SearchConstructor(false, Array.Empty<object>());
 
         Assert.IsNull(c);
     }
@@ -389,7 +389,7 @@ public class ReflectionTest
     public void ConstructorIsOutOfConsideration()
     {
         var m = ObjectReflectionStructureMap.Analyse(typeof(Methods));
-        var call = m.SearchBestInjectionMethod(new List<Type>());
+        var call = m.SearchInjectionMethod(new List<Type>());
         
         Assert.IsFalse(call.IsConstructor);
     }
@@ -398,7 +398,7 @@ public class ReflectionTest
     public void NoInjectAttributeIsOutOfConsideration()
     {
         var m = ObjectReflectionStructureMap.Analyse(typeof(Methods));
-        var call = m.SearchBestInjectionMethod(new List<Type>());
+        var call = m.SearchInjectionMethod(new List<Type>());
         
         Assert.AreEqual(call.AsMethodInfo.Name, "M2");
     }
@@ -407,7 +407,7 @@ public class ReflectionTest
     public void OneParamOneMatchMethod()
     {
         var m = ObjectReflectionStructureMap.Analyse(typeof(Methods));
-        var call = m.SearchBestInjectionMethod(new List<Type>{typeof(int)});
+        var call = m.SearchInjectionMethod(new List<Type>{typeof(int)});
         
         Assert.AreEqual(call.AsMethodInfo.Name, "M3");
     }
@@ -417,7 +417,7 @@ public class ReflectionTest
     public void TwoParamTwoMatchMethod()
     {
         var m = ObjectReflectionStructureMap.Analyse(typeof(Methods));
-        var call = m.SearchBestInjectionMethod(new List<Type>{typeof(int), typeof(string)});
+        var call = m.SearchInjectionMethod(new List<Type>{typeof(int), typeof(string)});
         
         Assert.AreEqual(call.AsMethodInfo.Name, "M5");
     }
@@ -427,7 +427,7 @@ public class ReflectionTest
     public void TwoParamOneMatchMethod()
     {
         var m = ObjectReflectionStructureMap.Analyse(typeof(Methods));
-        var call = m.SearchBestInjectionMethod(new List<Type>{typeof(int)});
+        var call = m.SearchInjectionMethod(new List<Type>{typeof(int)});
         
         Assert.AreEqual(call.AsMethodInfo.Name, "M3");
     }
@@ -436,7 +436,7 @@ public class ReflectionTest
     public void OneParamTwoMatchMethod()
     {
         var m = ObjectReflectionStructureMap.Analyse(typeof(Methods));
-        var call = m.SearchBestInjectionMethod(new List<Type>{typeof(int), typeof(string)});
+        var call = m.SearchInjectionMethod(new List<Type>{typeof(int), typeof(string)});
         
         Assert.AreEqual(call.AsMethodInfo.Name, "M3");
     }

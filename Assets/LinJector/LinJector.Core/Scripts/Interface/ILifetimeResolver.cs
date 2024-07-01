@@ -50,6 +50,14 @@ namespace LinJector.Interface
     {
         public void PreInitialize(Container container);
     }
+    
+    /// <summary>
+    /// Additional flag for resolver to post-initialize themselves intend to create cached type generator format. 
+    /// </summary>
+    public interface IConsiderPostInitializeResolver
+    {
+        public void PostInitialize(Container container);
+    }
 
     /// <summary>
     /// Additional flag for resolver to prevent container event handler do event on this resolver. Used to prevent

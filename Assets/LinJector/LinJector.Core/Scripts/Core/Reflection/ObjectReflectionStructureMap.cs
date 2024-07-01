@@ -148,7 +148,7 @@ namespace LinJector.Core.Reflection
         
         public MethodInfo AsMethodInfo => _methodInfo as MethodInfo;
         
-        public void Invoke(object target, params object[] parameters)
+        public void Invoke(object target, object[] parameters)
         {
             _methodInfo.Invoke(target, parameters);
         }
@@ -232,7 +232,7 @@ namespace LinJector.Core.Reflection
         /// <param name="excludeInjectAtt">Will constructor with injection attribute will being excluded?</param>
         /// <param name="arguments">Given arguments</param>
         /// <returns>The best fit constructor, but can not guarantee that it can be call successfully.</returns>
-        public InjectiveMethodBase SearchBestConstructor(bool excludeInjectAtt, object[] arguments)
+        public InjectiveMethodBase SearchConstructor(bool excludeInjectAtt, object[] arguments)
         {
             using (ListPool<Type>.Get(out var argTypes))
             {
@@ -244,7 +244,9 @@ namespace LinJector.Core.Reflection
                     ? Methods.Where(m => m.IsConstructor && !m.MarkAsInjection)
                     : Methods.Where(m => m.IsConstructor);
                 
-                foreach (var b in selector.Where(m => m.IsConstructor))
+                foreach (var b in selector
+                             .Where(m => m.Parameters.Length > 0)
+                             .Where(m => m.IsConstructor))
                 {
                     var idx = 0;
                     foreach (var p in b.Parameters)
@@ -280,12 +282,17 @@ namespace LinJector.Core.Reflection
         /// </summary>
         /// <param name="bindings">Collection of types can be provided from container.</param>
         /// <returns>The best fit method, but can not guarantee that it can be call successfully.</returns>
-        public InjectiveMethodBase SearchBestInjectionMethod(ICollection<Type> bindings)
+        public InjectiveMethodBase SearchInjectionMethod(ICollection<Type> bindings)
         {
             return Methods
+                .Where(m => m.Parameters.Length > 0)
                 .Where(m => !m.IsConstructor)
                 .OrderByDescending(m => m.Parameters
-                    .Count(p => bindings.Contains(p.RequestedType)))
+                    .Sum(p =>
+                    {
+                        if (p.IsInjectionOptional || p.IsParameterOptional) return 0;
+                        return bindings.Contains(p.RequestedType) ? 1 : -1;
+                    }))
                 .FirstOrDefault();
         }
     }
