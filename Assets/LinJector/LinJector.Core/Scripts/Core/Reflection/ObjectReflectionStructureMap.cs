@@ -52,6 +52,15 @@ namespace LinJector.Core.Reflection
         
         private bool _isCollection;
 
+        public string Name
+        {
+            get
+            {
+                if (_isField) return _fieldInfo.Name;
+                return _propertyInfo.Name;
+            }
+        }
+        
         public bool IsOptional => _attribute.Optional;
 
         public object Id => _attribute.Id;
@@ -259,14 +268,10 @@ namespace LinJector.Core.Reflection
         /// <summary>
         /// Find the default constructor which can give the most less parameters.
         /// </summary>
-        /// <param name="excludeInjectAtt">Will constructor with injection attribute will being excluded?</param>
         /// <returns>The best fit constructor, but can not guarantee that it can be call successfully.</returns>
-        public InjectiveMethodBase SearchDefaultConstructor(bool excludeInjectAtt)
+        public InjectiveMethodBase SearchDefaultConstructor()
         {
-            var selector = excludeInjectAtt
-                ? Methods.Where(m => m.IsConstructor && !m.MarkAsInjection)
-                : Methods.Where(m => m.IsConstructor);
-
+            var selector = Methods.Where(m => m.IsConstructor);
             return selector.FirstOrDefault(m => !m.Parameters.Any());
         }
 

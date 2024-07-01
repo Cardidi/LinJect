@@ -21,6 +21,12 @@ namespace LinJector.Core
             return new InvalidProgramException(
                 "There are two resolver relying on each other which make resolving impossible");
         }
+        
+        public static InvalidProgramException DependencyUnsatisfied()
+        {
+            return new InvalidProgramException(
+                "There are two resolver relying on each other which make resolving impossible");
+        }
 
         public static InvalidOperationException SuperEmptyContainerDidNotAllowThisOperation()
         {

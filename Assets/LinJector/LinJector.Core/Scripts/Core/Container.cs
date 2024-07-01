@@ -73,14 +73,12 @@ namespace LinJector.Core
         {
             if (requireInit && !_initialized)
                 throw new InvalidOperationException("Do not trying to access an uninitalized container!");
-            if (IsDisposed()) throw new InvalidOperationException("Do not trying to access an Disposed container!");
+            if (IsDisposed) throw new InvalidOperationException("Do not trying to access an Disposed container!");
         }
 
         #endregion
 
         #region InternalAPI
-
-        internal bool IsDisposed() => _innerMap == null;
         
         internal bool TakeResolver(Type type, object id, out ILifetimeResolver target)
         {
@@ -90,7 +88,7 @@ namespace LinJector.Core
             return target != null;
         }
 
-        internal uint TakeResolvers(Type type, object id, List<ILifetimeResolver> targets)
+        internal uint TakeResolvers(Type type, object id, ICollection<ILifetimeResolver> targets)
         {
             IEnumerable<ILifetimeResolver> iter;
             if (id == null) iter = Resolvable(type);
@@ -106,7 +104,7 @@ namespace LinJector.Core
             return count;
         }
 
-        internal uint TakeAllResolvers(List<ILifetimeResolver> targets)
+        internal uint TakeAllResolvers(ICollection<ILifetimeResolver> targets)
         {
             uint count = 0;
             foreach (var r in Resolvable())
@@ -118,10 +116,40 @@ namespace LinJector.Core
             return count;
         }
 
+        internal uint TakeAllRegisteredType(ICollection<Type> types)
+        {
+            uint count = 0;
+            foreach (var r in _innerMap)
+            {
+                types.Add(r.Key);
+                count++;
+            }
+
+            return count;
+        }
+
+        private HashSet<Type> _registeredTypes;
+        
+        internal HashSet<Type> RegisteredTypes
+        {
+            get
+            {
+                if (_registeredTypes == null)
+                {
+                    _registeredTypes = HashSetPool<Type>.Get();
+                    TakeAllRegisteredType(_registeredTypes);
+                }
+
+                return _registeredTypes;
+            }
+        }
+
         #endregion
 
         #region PublicAPI
-
+        
+        public bool IsDisposed => _innerMap == null;
+        
         public uint Id => _id;
         
         public object Resolve(Type type, object id = null)
@@ -337,7 +365,7 @@ namespace LinJector.Core
                 chs.AddRange(_children);
                 foreach (var c in chs)
                 {
-                    if (c.IsDisposed()) continue;
+                    if (c.IsDisposed) continue;
                     c.Dispose();
                 }
             }
@@ -356,6 +384,7 @@ namespace LinJector.Core
             // DicPool and ListPool will clear all element when release an object.
             ContainerBuilder.Release(_innerMap);
             ListPool<Container>.Release(_children);
+            if (_registeredTypes != null) HashSetPool<Type>.Release(_registeredTypes);
 #if UNITY_EDITOR
             if (Application.isPlaying){
 #endif

@@ -176,7 +176,7 @@ public class ReflectionTest
         var test = (PrivateConstructor) RuntimeHelpers.GetUninitializedObject(t);
         
         var m = ObjectReflectionStructureMap.Analyse(t);
-        var c = m.SearchDefaultConstructor(false);
+        var c = m.SearchDefaultConstructor();
 
         c.Invoke(test, Array.Empty<object>());
         
@@ -201,7 +201,7 @@ public class ReflectionTest
         var t = typeof(PrivateConstructor);
         
         var m = ObjectReflectionStructureMap.Analyse(t);
-        var c = m.SearchDefaultConstructor(true);
+        var c = m.SearchDefaultConstructor();
 
         Assert.IsNull(c);
     }
@@ -317,7 +317,7 @@ public class ReflectionTest
         var test = (PublicConstructor) RuntimeHelpers.GetUninitializedObject(t);
         
         var m = ObjectReflectionStructureMap.Analyse(t);
-        var c = m.SearchDefaultConstructor(false);
+        var c = m.SearchDefaultConstructor();
 
         c.Invoke(test, Array.Empty<object>());
         
@@ -331,7 +331,7 @@ public class ReflectionTest
         var test = (PublicConstructor) RuntimeHelpers.GetUninitializedObject(t);
         
         var m = ObjectReflectionStructureMap.Analyse(t);
-        var c = m.SearchDefaultConstructor(true);
+        var c = m.SearchDefaultConstructor();
 
         c.Invoke(test, Array.Empty<object>());
         

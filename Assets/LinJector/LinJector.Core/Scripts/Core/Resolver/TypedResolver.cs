@@ -48,6 +48,7 @@ namespace LinJector.Core.Resolver
             return _runtimeActivator.Invoke(obj =>
             {
                 // todo: made pre-injection done.
+                // todo: Make sure the container for activator should matched with the container who holds this.
             }, _arguments);
         }
 
