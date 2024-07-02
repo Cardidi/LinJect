@@ -49,8 +49,6 @@ namespace LinJector.Core.Reflection
         private PropertyInfo _propertyInfo;
 
         private bool _isField;
-        
-        private bool _isCollection;
 
         public string Name
         {
@@ -229,10 +227,10 @@ namespace LinJector.Core.Reflection
         /// <summary>
         /// Find the constructor which can match more arguments.
         /// </summary>
-        /// <param name="excludeInjectAtt">Will constructor with injection attribute will being excluded?</param>
+        /// <param name="preferInjectAtt">Will constructor with injection attribute as first-class?</param>
         /// <param name="arguments">Given arguments</param>
         /// <returns>The best fit constructor, but can not guarantee that it can be call successfully.</returns>
-        public InjectiveMethodBase SearchConstructor(bool excludeInjectAtt, object[] arguments)
+        public InjectiveMethodBase SearchConstructor(bool preferInjectAtt, object[] arguments)
         {
             using (ListPool<Type>.Get(out var argTypes))
             {
@@ -240,11 +238,14 @@ namespace LinJector.Core.Reflection
                 var bestfitArgumentsCount = -1;
                 InjectiveMethodBase bestfitMethod = null;
 
-                var selector = excludeInjectAtt
-                    ? Methods.Where(m => m.IsConstructor && !m.MarkAsInjection)
-                    : Methods.Where(m => m.IsConstructor);
+                var sel = Methods
+                    .Where(m => m.IsConstructor)
+                    .OrderBy(p => p.Parameters.Length);
+
+                if (preferInjectAtt)
+                    sel = sel.ThenBy(p => p.MarkAsInjection? -1 : 0);
                 
-                foreach (var b in selector.Where(m => m.Parameters.Length > 0))
+                foreach (var b in sel)
                 {
                     var idx = 0;
                     foreach (var p in b.Parameters)
@@ -254,23 +255,15 @@ namespace LinJector.Core.Reflection
                         if (p.RequestedType.IsAssignableFrom(matchType)) idx++;
                     }
 
-                    if (idx <= bestfitArgumentsCount) continue;
-                    bestfitArgumentsCount = idx;
-                    bestfitMethod = b;
+                    if (idx > bestfitArgumentsCount)
+                    {
+                        bestfitArgumentsCount = idx;
+                        bestfitMethod = b;
+                    }
                 }
 
                 return bestfitMethod;
             }
-        }
-
-        /// <summary>
-        /// Find the default constructor which can give the most less parameters.
-        /// </summary>
-        /// <returns>The best fit constructor, but can not guarantee that it can be call successfully.</returns>
-        public InjectiveMethodBase SearchDefaultConstructor()
-        {
-            var selector = Methods.Where(m => m.IsConstructor);
-            return selector.FirstOrDefault(m => !m.Parameters.Any());
         }
 
         /// <summary>
@@ -281,7 +274,6 @@ namespace LinJector.Core.Reflection
         public InjectiveMethodBase SearchInjectionMethod(ICollection<Type> bindings)
         {
             return Methods
-                .Where(m => m.Parameters.Length > 0)
                 .Where(m => !m.IsConstructor)
                 .OrderByDescending(m => m.Parameters
                     .Sum(p =>

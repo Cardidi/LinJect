@@ -186,12 +186,6 @@ namespace LinJector.Core.Reflection
                 _nonConstructorInjector != null,
                 args.Select(p => p.Existed).ToArray());
 
-            if (ctor == null)
-            {
-                method = Structure.SearchDefaultConstructor();
-                return;
-            }
-
             method = ctor;
             GetUnsatisfiedMethodArguments(ctor, args);
         }

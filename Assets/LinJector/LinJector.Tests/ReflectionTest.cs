@@ -176,7 +176,7 @@ public class ReflectionTest
         var test = (PrivateConstructor) RuntimeHelpers.GetUninitializedObject(t);
         
         var m = ObjectReflectionStructureMap.Analyse(t);
-        var c = m.SearchDefaultConstructor();
+        var c = m.SearchConstructor(false, Array.Empty<object>());
 
         c.Invoke(test, Array.Empty<object>());
         
@@ -201,7 +201,7 @@ public class ReflectionTest
         var t = typeof(PrivateConstructor);
         
         var m = ObjectReflectionStructureMap.Analyse(t);
-        var c = m.SearchDefaultConstructor();
+        var c = m.SearchConstructor(false, Array.Empty<object>());
 
         Assert.IsNull(c);
     }
@@ -317,7 +317,7 @@ public class ReflectionTest
         var test = (PublicConstructor) RuntimeHelpers.GetUninitializedObject(t);
         
         var m = ObjectReflectionStructureMap.Analyse(t);
-        var c = m.SearchDefaultConstructor();
+        var c = m.SearchConstructor(false, Array.Empty<object>());
 
         c.Invoke(test, Array.Empty<object>());
         
@@ -331,7 +331,7 @@ public class ReflectionTest
         var test = (PublicConstructor) RuntimeHelpers.GetUninitializedObject(t);
         
         var m = ObjectReflectionStructureMap.Analyse(t);
-        var c = m.SearchDefaultConstructor();
+        var c = m.SearchConstructor(false, Array.Empty<object>());
 
         c.Invoke(test, Array.Empty<object>());
         
@@ -438,7 +438,7 @@ public class ReflectionTest
         var m = ObjectReflectionStructureMap.Analyse(typeof(Methods));
         var call = m.SearchInjectionMethod(new List<Type>{typeof(int), typeof(string)});
         
-        Assert.AreEqual(call.AsMethodInfo.Name, "M3");
+        Assert.AreEqual(call.AsMethodInfo.Name, "M5");
     }
 
     #endregion
